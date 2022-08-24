@@ -12,10 +12,9 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
-const login = process.env.DB_LOGIN;
-const password = process.env.DB_PASSWORD;
+const uri = process.env.MONGO_DB_URI;
 
-mongoose.connect("mongodb+srv://" + login + ":" + password + "@cluster0.te97pzx.mongodb.net/todolistDB", {useNewUrlParser: true});
+mongoose.connect(uri, {useNewUrlParser: true});
 
 const itemsSchema = new mongoose.Schema ({
   name: String
