@@ -16,12 +16,7 @@ const uri = process.env.MONGO_DB_URI;
 
 mongoose.connect(uri, {useNewUrlParser: true});
 
-const itemsSchema = new mongoose.Schema ({
-  name: String
-});
-
-const Item = mongoose.model('Item', itemsSchema);
-
+//creating first items as hints for using the app
 const item1 = new Item ({
   name: "Welcome to your todolist!"
 });
@@ -48,6 +43,8 @@ const List = mongoose.model('List', listSchema);
 app.get("/", (req, res) => {
     
   Item.find({}, (err, foundItems) => {
+
+    //inserts default items when list is empty
     if (foundItems.length === 0) {
       Item.insertMany(defaultItems, (err) => err ? console.log(err) : console.log("Succesfully saved default items to DB"));
       res.redirect("/");
@@ -61,7 +58,10 @@ app.get("/", (req, res) => {
     });
   });
 
-  app.get("/:customListName", (req, res) => {
+  //creating custom lists
+app.get("/:customListName", (req, res) => {
+    
+    //making list names capitalized
     const customListName = _.capitalize(req.params.customListName);
 
     List.findOne({name: customListName}, (err, foundList) => {
@@ -94,10 +94,12 @@ app.post("/", (req, res) => {
       name: itemName
     });
 
+  //saving items do main list
     if(listName === "Today") {
       item4.save();
       res.redirect("/");
     } else {
+      //unless the name is a custom list's name
       List.findOne({name: listName}, (err, foundList) => {
         if (!err) {
           foundList.items.push(item4);
@@ -116,11 +118,13 @@ app.post("/delete", (req, res) => {
     const checkedItemId = req.body.checkbox;
     const listName = req.body.listName;
 
+    //deafult list is a seperate collection so we just remove an item from there
     if (listName === "Today") {
       Item.findByIdAndRemove(checkedItemId, (err) => err ? console.log(err) : console.log("Item deleted"));
 
       res.redirect("/");
     } else {
+      //custom lists are objects in another collection so we have to update the array of items in one to delete the chosen item
       List.findOneAndUpdate({name: listName}, {$pull: {items: {_id: checkedItemId}}}, (err, foundList) => {
         if (!err) {
           res.redirect("/" + listName);
